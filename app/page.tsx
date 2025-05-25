@@ -1,20 +1,58 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react";
 import Link from "next/link"
 import Image from "next/image"
 import { Car, QrCode, Bell, ArrowRight, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
+
 export default function Home() {
-  const [showCarOwnerOptions, setShowCarOwnerOptions] = useState(false)
+  const [showCarOwnerOptions, setShowCarOwnerOptions] = useState(false);
+  const [isAuthenticatedState, setIsAuthenticatedState] = useState(false);
+
+  useEffect(() => {
+    const checkAuthentication = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          setIsAuthenticatedState(false);
+          return;
+        }
+
+        const response = await fetch("http://localhost:8000/is_authenticated", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          const user = await response.json();
+          setIsAuthenticatedState(true);
+        } else {
+          const user = null;
+          setIsAuthenticatedState(false);
+        }
+      } catch (error) {
+        console.error("Error checking authentication:", error);
+        setIsAuthenticatedState(false);
+      }
+    };
+
+    checkAuthentication();
+  }, []);
+
+  const isAuthenticated = () => {
+    return isAuthenticatedState;
+  };
 
   // Close dropdown when clicking outside
   const handleClickOutside = () => {
     if (showCarOwnerOptions) {
-      setShowCarOwnerOptions(false)
+      setShowCarOwnerOptions(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-[#F5F5F5]" onClick={handleClickOutside}>
@@ -28,6 +66,24 @@ export default function Home() {
           <nav>
             <ul className="flex space-x-4">
               <li>
+                {!isAuthenticatedState && (
+                  <Link href="/login">
+                    <Button variant="ghost">Login</Button>
+                  </Link>
+                )}
+                {isAuthenticatedState && (
+                  <li>
+                    <Button onClick={() => {
+                      localStorage.removeItem("token");
+                      setIsAuthenticatedState(false);
+                      window.location.href = "/";
+                    }} variant="ghost">
+                      Logout
+                    </Button>
+                  </li>
+                )}
+              </li>
+              {/* <li>
                 <Link href="/about" className="hover:underline">
                   About
                 </Link>
@@ -36,7 +92,7 @@ export default function Home() {
                 <Link href="/support" className="hover:underline">
                   Support
                 </Link>
-              </li>
+              </li> */}
             </ul>
           </nav>
         </div>
@@ -61,31 +117,39 @@ export default function Home() {
         <div className="flex flex-col md:flex-row justify-center gap-6 mb-16">
           <div className="relative">
             <Button
-              onClick={() => setShowCarOwnerOptions(!showCarOwnerOptions)}
+              onClick={() => {
+                if (!isAuthenticated()) {
+                  window.location.href = "/login";
+                } else {
+                  setShowCarOwnerOptions(!showCarOwnerOptions);
+                }
+              }}
               className="w-full md:w-64 h-16 text-lg bg-[#00A86B] hover:bg-[#008f5b] rounded-xl shadow-lg"
             >
               I'm a Car Owner
               <Car className="ml-2 h-5 w-5" />
             </Button>
-            {showCarOwnerOptions && (
-              <div
-                className="absolute z-10 mt-2 w-full bg-white rounded-lg shadow-lg overflow-hidden"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Link href="/car-owner/register">
-                  <div className="px-4 py-3 hover:bg-[#F5F5F5] cursor-pointer">
-                    <p className="font-medium text-[#212121]">Register New Car</p>
-                    <p className="text-sm text-[#212121]/70">First time? Register your car details</p>
-                  </div>
-                </Link>
-                <Link href="/car-owner/activate">
-                  <div className="px-4 py-3 hover:bg-[#F5F5F5] cursor-pointer border-t border-[#E0E0E0]">
-                    <p className="font-medium text-[#212121]">Activate Double Park Mode</p>
-                    <p className="text-sm text-[#212121]/70">Already registered? Activate your NFC</p>
-                  </div>
-                </Link>
-              </div>
-            )}
+            {isAuthenticated() ? (
+              showCarOwnerOptions && (
+                <div
+                  className="absolute z-10 mt-2 w-full bg-white rounded-lg shadow-lg overflow-hidden"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Link href="/car-owner/register">
+                    <div className="px-4 py-3 hover:bg-[#F5F5F5] cursor-pointer">
+                      <p className="font-medium text-[#212121]">Register New Car</p>
+                      <p className="text-sm text-[#212121]/70">First time? Register your car details</p>
+                    </div>
+                  </Link>
+                  <Link href="/car-owner/activate">
+                    <div className="px-4 py-3 hover:bg-[#F5F5F5] cursor-pointer border-t border-[#E0E0E0]">
+                      <p className="font-medium text-[#212121]">Activate Double Park Mode</p>
+                      <p className="text-sm text-[#212121]/70">Already registered? Activate your NFC</p>
+                    </div>
+                  </Link>
+                </div>
+              )
+            ) : null}
           </div>
 
           <Link href="/blocked/scan">

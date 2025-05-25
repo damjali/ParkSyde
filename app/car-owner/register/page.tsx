@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { ChevronLeft, Car, Shield } from "lucide-react"
@@ -10,20 +10,68 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { set } from "date-fns"
 
 export default function RegisterPage() {
+  const [isAuthenticatedState, setIsAuthenticatedState] = useState(false);
+  const [user, setUser] = useState({
+    email: "",
+    user_id: "",
+    pin_number: "",
+    phone_number: ""
+  });
+
+  useEffect(() => {
+    const checkAuthentication = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          setIsAuthenticatedState(false);
+          return;
+        }
+
+        const response = await fetch("http://localhost:8000/is_authenticated", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          const user = await response.json();
+          setUser(user);
+          setIsAuthenticatedState(true);
+        } else {
+          const user = null;
+          setIsAuthenticatedState(false);
+        }
+      } catch (error) {
+        console.error("Error checking authentication:", error);
+        setIsAuthenticatedState(false);
+      }
+    };
+
+    checkAuthentication();
+  }, []);
+
+  const isAuthenticated = () => {
+    return isAuthenticatedState;
+  };
+
   const [step, setStep] = useState(1)
   const [formData, setFormData] = useState({
     plateNumber: "",
     phoneNumber: "",
     pin: "",
     confirmPin: "",
+    password: "",
   })
   const [errors, setErrors] = useState({
     plateNumber: "",
     phoneNumber: "",
     pin: "",
     confirmPin: "",
+    password: "",
   })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -61,6 +109,11 @@ export default function RegisterPage() {
     const newErrors = { ...errors }
     let isValid = true
 
+    if (!formData.password.trim()) {
+      newErrors.password = "Password is required"
+      isValid = false
+    }
+
     if (!formData.pin.trim()) {
       newErrors.pin = "PIN is required"
       isValid = false
@@ -78,18 +131,150 @@ export default function RegisterPage() {
     return isValid
   }
 
-  const handleNext = () => {
+  const handleNext = async (event: React.FormEvent) => {
+    event.preventDefault();
+    isAuthenticated();
+    if (!isAuthenticatedState) {
+      window.location.href = "/login";
+    }
+    const { plateNumber } = formData
+    const { user_id } = user
+
     if (validateStep1()) {
-      setStep(2)
+      console.log("Checking car plate data:", JSON.stringify({ plateNumber }))
+      try {
+        const response = await fetch("http://localhost:8000/cars/" + plateNumber, {
+          method: "GET"
+        });
+
+        const data = await response.json().catch(() => null);
+
+        if (!response.ok) {
+          console.error("Checking car data failed:", data?.detail || response.statusText);
+          alert("Checking car data failed. Please try again.");
+        } else if (data) {
+          // Handle car already exists
+          console.error("Car already exists:", data?.detail || response.statusText);
+          alert("Car already exists. Please try again.");
+        } else {
+          // Proceed to the next step
+          setStep(2);
+        }
+      } catch (error) {
+        console.error("Registration error:", error);
+        alert("Registration failed. Please try again.");
+      }
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    const { user_id, email } = user
+    const { plateNumber, pin, phoneNumber, password } = formData
+    let validation = true
     if (validateStep2()) {
-      // In a real app, we would submit the data to the server here
-      // For now, we'll just redirect to the success page
-      window.location.href = "/car-owner/register/success"
+
+      // authenticate password
+
+      console.log("Authenticating user:", JSON.stringify({ email, password }))
+
+      try {
+        const response = await fetch("http://localhost:8000/token", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: `username=${email}&password=${password}`,
+        });
+
+        if (response.ok) {
+        const data = await response.json();
+        localStorage.setItem("token", data.access_token);
+        } else {
+          // Handle login error
+          validation = false
+          console.error("Login failed:", response.statusText);
+          alert("Wrong password. Please check your credentials.");
+        }
+      } catch (error) {
+        console.error("Login error:", error);
+        alert("Authentication failed. Please try again.");
+      }
+
+      //create car and update user
+
+      const car_status = 0
+      if (validation) try {
+        console.log("Sending data:", JSON.stringify({ plateNumber, user_id, car_status }))
+        let response = await fetch("http://localhost:8000/cars", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ plateNumber, user_id, car_status }),
+        });
+
+        let data = await response.json().catch(() => null);
+
+        if (!response.ok) {
+          // Handle registration error
+          console.error("Car registration failed:", data?.detail || response.statusText);
+          alert("Car registration failed. Please try again.");
+          validation = false
+        }
+
+        const pin_number = pin;
+        const phone_number = phoneNumber;
+        response = await fetch("http://localhost:8000/update", {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ user_id, pin_number, phone_number }),
+        });
+
+        data = await response.json().catch(() => null);
+
+        if (!response.ok) {
+          // Handle registration error
+          console.error("Registration failed:", data?.detail || response.statusText);
+          alert("Registration failed. Please try again.");
+          validation = false
+        }
+      } catch (error) {
+        console.error("Registration error:", error);
+        alert("Registration failed. Please try again.");
+      }
+
+      // update token
+
+      if (validation) try {
+        const response = await fetch("http://localhost:8000/token", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: `username=${email}&password=${password}`,
+        });
+
+        if (response.ok) {
+        const data = await response.json();
+        localStorage.setItem("token", data.access_token);
+        } else {
+          // Handle login error
+          validation = false
+          console.error("Login failed:", response.statusText);
+          alert("Wrong password. Please check your credentials.");
+        }
+      } catch (error) {
+        console.error("Login error:", error);
+        alert("Authentication failed. Please try again.");
+      }
+
+      if (validation) {
+        window.location.href = "/car-owner/register/success"
+      }
     }
   }
 
@@ -209,6 +394,20 @@ export default function RegisterPage() {
                         className={errors.confirmPin ? "border-[#F44336]" : ""}
                       />
                       {errors.confirmPin && <p className="text-sm text-[#F44336]">{errors.confirmPin}</p>}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="password">Password</Label>
+                      <Input
+                        id="password"
+                        name="password"
+                        type="password"
+                        placeholder="Enter your password"
+                        value={formData.password}
+                        onChange={handleChange}
+                        className={errors.password ? "border-[#F44336]" : ""}
+                      />
+                      {errors.password && <p className="text-sm text-[#F44336]">{errors.password}</p>}
                     </div>
                   </div>
 

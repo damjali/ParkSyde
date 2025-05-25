@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { ChevronLeft, Car, ShieldCheck, ShieldOff, Clock, Plus, Check, ChevronDown } from "lucide-react"
@@ -9,12 +9,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 
-// Mock data for previously registered plate numbers
-const mockRegisteredPlates = [
-  { id: 1, plateNumber: "ABC1234" },
-  { id: 2, plateNumber: "DEF5678" },
-  { id: 3, plateNumber: "GHI9012" },
-]
 
 export default function ActivatePage() {
   const [isActive, setIsActive] = useState(false)
@@ -23,24 +17,109 @@ export default function ActivatePage() {
   const [pin, setPin] = useState("")
   const [error, setError] = useState("")
   const [activeSince, setActiveSince] = useState<Date | null>(null)
-  const [registeredPlates, setRegisteredPlates] = useState(mockRegisteredPlates)
+  const [registeredPlates, setRegisteredPlates] = useState<{ plateNumber: string }[]>([])
   const [showPlateSelector, setShowPlateSelector] = useState(true)
   const [showAddNewPlate, setShowAddNewPlate] = useState(false)
   const [newPlateNumber, setNewPlateNumber] = useState("")
   const [plateDropdownOpen, setPlateDropdownOpen] = useState(false)
+  const [carplates, setCarPlates] = useState([]);
+  const [isAuthenticatedState, setIsAuthenticatedState] = useState(false);
+  const [user, setUser] = useState({
+    email: "",
+    user_id: "",
+    pin_number: "",
+    phone_number: ""
+  });
 
-  const handleActivate = () => {
+  useEffect(() => {
+    const checkAuthentication = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          setIsAuthenticatedState(false);
+          return;
+        }
+        const response = await fetch("http://localhost:8000/is_authenticated", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (response.ok) {
+          const user = await response.json();
+          console.log("Authenticated user:", user);
+          setUser(user);
+          setIsAuthenticatedState(true);
+        } else {
+          const user = null;
+          setIsAuthenticatedState(false);
+        }
+      } catch (error) {
+        console.error("Error checking authentication:", error);
+        setIsAuthenticatedState(false);
+      }
+    };
+    checkAuthentication();
+  }, []);
+  const isAuthenticated = () => {
+    return isAuthenticatedState;
+  };
+
+  useEffect(() => {
+    isAuthenticated();
+
+    const fetchCarPlates = async () => {
+      try {
+        const response = await fetch("http://localhost:8000/carsUser/" + user.user_id, {
+          method: "GET"
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          console.log("Car plates data:", data)
+          setRegisteredPlates(data)
+        } else {
+          console.error("Failed to fetch car plates")
+        }
+      } catch (error) {
+        console.error("Error fetching car plates:", error)
+      }
+    }
+
+    fetchCarPlates()
+
+  }, [isAuthenticatedState])
+
+  const handleActivate = async () => {
     if (!plateNumber.trim()) {
       setError("Please select or enter a plate number")
       return
     }
 
-    setShowPinInput(true)
+    try{
+      const response = await fetch("http://localhost:8000/cars/"+plateNumber, {
+        method: "GET"
+      });
+
+      const car = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        console.error("Car not found:", car?.detail || response.statusText);
+        alert("Car not found.");
+      } else {
+        setIsActive(car.car_status)
+      }
+    } catch (error) {
+      console.error("Car not found:", error);
+      alert("Car not found. Please try again.");
+    }
+
+    setShowPinInput(!isActive)
     setShowPlateSelector(false)
     setError("")
   }
 
-  const handlePinSubmit = () => {
+  const handlePinSubmit = async () => {
     if (!pin.trim()) {
       setError("Please enter your PIN")
       return
@@ -51,10 +130,39 @@ export default function ActivatePage() {
       return
     }
 
+    console.log("User:", user)
     // In a real app, we would verify the PIN with the server
-    setIsActive(true)
+    if (pin !== user.pin_number) {
+      setError("Incorrect PIN")
+      return
+    }
+    
+    try {
+      const now = Date.now();
+      const status = true;
+      console.log("Data:", { plateNumber, status, now})
+      const response = await fetch("http://localhost:8000/cars/status", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ plateNumber, status, now }),
+      });
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        console.error("Car not found:", data?.detail || response.statusText);
+        alert("Car not found.");
+      } else {
+        setIsActive(true)
+        setActiveSince(new Date(now))
+      }
+    } catch (error) {
+      console.error("Deactivation error:", error);
+      alert("Deactivation failed. Please try again.");
+    }
     setShowPinInput(false)
-    setActiveSince(new Date())
     setError("")
   }
 
@@ -63,7 +171,7 @@ export default function ActivatePage() {
     setError("")
   }
 
-  const handleDeactivateConfirm = () => {
+  const handleDeactivateConfirm = async () => {
     if (!pin.trim()) {
       setError("Please enter your PIN")
       return
@@ -74,9 +182,35 @@ export default function ActivatePage() {
       return
     }
 
-    setIsActive(false)
+    if (pin !== user.pin_number) {
+      setError("Incorrect PIN")
+      return
+    }
+    const now = null;
+    const status = false;
+    try {
+      const response = await fetch("http://localhost:8000/cars/status", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ plateNumber, status, now }),
+      });
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        console.error("Car not found:", data?.detail || response.statusText);
+        alert("Car not found.");
+      } else {
+        setIsActive(false)
+        setActiveSince(null)
+      }
+    } catch (error) {
+      console.error("Deactivation error:", error);
+      alert("Deactivation failed. Please try again.");
+    }
     setShowPinInput(false)
-    setActiveSince(null)
     setError("")
     setPin("")
     setShowPlateSelector(true)
@@ -95,7 +229,6 @@ export default function ActivatePage() {
 
     // Add the new plate to the list
     const newPlate = {
-      id: registeredPlates.length + 1,
       plateNumber: newPlateNumber.toUpperCase(),
     }
     setRegisteredPlates([...registeredPlates, newPlate])
@@ -154,9 +287,8 @@ export default function ActivatePage() {
                   <div className="relative">
                     <button
                       type="button"
-                      className={`flex items-center justify-between w-full p-3 text-left border rounded-md ${
-                        plateNumber ? "border-[#00A86B]" : "border-input"
-                      } ${error && !showPinInput ? "border-[#F44336]" : ""}`}
+                      className={`flex items-center justify-between w-full p-3 text-left border rounded-md ${plateNumber ? "border-[#00A86B]" : "border-input"
+                        } ${error && !showPinInput ? "border-[#F44336]" : ""}`}
                       onClick={() => setPlateDropdownOpen(!plateDropdownOpen)}
                     >
                       <span>{plateNumber || "Select a car plate number"}</span>
@@ -167,7 +299,6 @@ export default function ActivatePage() {
                       <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
                         {registeredPlates.map((plate) => (
                           <div
-                            key={plate.id}
                             className="flex items-center justify-between p-3 hover:bg-[#F5F5F5] cursor-pointer"
                             onClick={() => handleSelectPlate(plate.plateNumber)}
                           >
@@ -264,9 +395,8 @@ export default function ActivatePage() {
                 <div className="space-y-4">
                   <Button
                     onClick={isActive ? handleDeactivateConfirm : handlePinSubmit}
-                    className={`w-full text-lg py-6 ${
-                      isActive ? "bg-[#F44336] hover:bg-[#d32f2f]" : "bg-[#00A86B] hover:bg-[#008f5b]"
-                    }`}
+                    className={`w-full text-lg py-6 ${isActive ? "bg-[#F44336] hover:bg-[#d32f2f]" : "bg-[#00A86B] hover:bg-[#008f5b]"
+                      }`}
                   >
                     {isActive ? "Deactivate" : "Activate"}
                     {isActive ? <ShieldOff className="ml-2 h-5 w-5" /> : <ShieldCheck className="ml-2 h-5 w-5" />}
