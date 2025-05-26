@@ -24,6 +24,7 @@ export default function ActivatePage() {
   const [plateDropdownOpen, setPlateDropdownOpen] = useState(false)
   const [carplates, setCarPlates] = useState([]);
   const [isAuthenticatedState, setIsAuthenticatedState] = useState(false);
+  const [activeTimer, setActiveTimer] = useState(0);
   const [user, setUser] = useState({
     email: "",
     user_id: "",
@@ -96,8 +97,8 @@ export default function ActivatePage() {
       return
     }
 
-    try{
-      const response = await fetch("http://localhost:8000/cars/"+plateNumber, {
+    try {
+      const response = await fetch("http://localhost:8000/cars/" + plateNumber, {
         method: "GET"
       });
 
@@ -107,15 +108,18 @@ export default function ActivatePage() {
         console.error("Car not found:", car?.detail || response.statusText);
         alert("Car not found.");
       } else {
+        console.log("Car data:", car);
+        console.log("Car active since:", new Date(car.activated_at));
+        console.log("Current time:", new Date());
         setIsActive(car.car_status)
+        setActiveSince(car.activated_at ? new Date(car.activated_at) : null)
+        setShowPinInput(!car.car_status)
+        setShowPlateSelector(false)
       }
     } catch (error) {
       console.error("Car not found:", error);
       alert("Car not found. Please try again.");
     }
-
-    setShowPinInput(!isActive)
-    setShowPlateSelector(false)
     setError("")
   }
 
@@ -136,17 +140,16 @@ export default function ActivatePage() {
       setError("Incorrect PIN")
       return
     }
-    
+
     try {
-      const now = Date.now();
       const status = true;
-      console.log("Data:", { plateNumber, status, now})
+      console.log("Data:", { plateNumber, status })
       const response = await fetch("http://localhost:8000/cars/status", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ plateNumber, status, now }),
+        body: JSON.stringify({ plateNumber, status }),
       });
 
       const data = await response.json().catch(() => null);
@@ -156,7 +159,7 @@ export default function ActivatePage() {
         alert("Car not found.");
       } else {
         setIsActive(true)
-        setActiveSince(new Date(now))
+        setActiveSince(data.activated_at ? new Date(data.activated_at) : new Date())
       }
     } catch (error) {
       console.error("Deactivation error:", error);
@@ -186,7 +189,7 @@ export default function ActivatePage() {
       setError("Incorrect PIN")
       return
     }
-    const now = null;
+
     const status = false;
     try {
       const response = await fetch("http://localhost:8000/cars/status", {
@@ -194,7 +197,7 @@ export default function ActivatePage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ plateNumber, status, now }),
+        body: JSON.stringify({ plateNumber, status }),
       });
 
       const data = await response.json().catch(() => null);
@@ -205,15 +208,16 @@ export default function ActivatePage() {
       } else {
         setIsActive(false)
         setActiveSince(null)
+        setShowPinInput(false)
+        setShowPlateSelector(true)
       }
     } catch (error) {
       console.error("Deactivation error:", error);
       alert("Deactivation failed. Please try again.");
     }
-    setShowPinInput(false)
     setError("")
     setPin("")
-    setShowPlateSelector(true)
+    
   }
 
   const handleSelectPlate = (selectedPlate: string) => {
@@ -221,20 +225,66 @@ export default function ActivatePage() {
     setPlateDropdownOpen(false)
   }
 
-  const handleAddNewPlate = () => {
+  const handleAddNewPlate = async () => {
+    const { user_id, email } = user
     if (!newPlateNumber.trim()) {
       setError("Please enter a plate number")
       return
     }
 
-    // Add the new plate to the list
+    console.log("Checking car plate data:", JSON.stringify({ newPlateNumber }))
+    try {
+      const response = await fetch("http://localhost:8000/cars/" + newPlateNumber, {
+        method: "GET"
+      });
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        console.error("Checking car data failed:", data?.detail || response.statusText);
+        alert("Checking car data failed. Please try again.");
+      } else if (data) {
+        // Handle car already exists
+        console.error("Car already exists:", data?.detail || response.statusText);
+        alert("Car already exists. Please try again.");
+      } else {
+        // Proceed to the next step
+        const car_status = false; // Default status for new car
+        let plateNumber = newPlateNumber.toUpperCase();
+        console.log("Sending data:", JSON.stringify({ plateNumber, user_id, car_status }))
+        const response = await fetch("http://localhost:8000/cars", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ plateNumber, user_id, car_status }),
+        });
+
+        const data = await response.json().catch(() => null);
+
+        if (!response.ok) {
+          // Handle registration error
+          console.error("Car registration failed:", data?.detail || response.statusText);
+          alert("Car registration failed. Please try again.");
+        } else {
+          const newPlate = {
+            plateNumber: newPlateNumber.toUpperCase(),
+          }
+          setRegisteredPlates([...registeredPlates, newPlate])
+          setPlateNumber(newPlateNumber.toUpperCase())
+          setNewPlateNumber("")
+          setShowAddNewPlate(false)
+        }
+      }
+
+    } catch (error) {
+      console.error("Registration error:", error);
+      alert("Registration failed. Please try again.");
+    }
     const newPlate = {
       plateNumber: newPlateNumber.toUpperCase(),
     }
-    setRegisteredPlates([...registeredPlates, newPlate])
-    setPlateNumber(newPlateNumber.toUpperCase())
-    setNewPlateNumber("")
-    setShowAddNewPlate(false)
+
     setError("")
   }
 
@@ -250,6 +300,16 @@ export default function ActivatePage() {
     }
     return `${mins}m`
   }
+
+  useEffect(() => {
+    if (isActive && activeSince) {
+      const interval = setInterval(() => {
+        setActiveTimer((prev) => prev + 1);
+      }, 60000); // 60,000 ms = 1 minute
+
+      return () => clearInterval(interval);
+    }
+  }, [isActive, activeSince]);
 
   return (
     <div className="min-h-screen bg-[#F5F5F5] py-12">

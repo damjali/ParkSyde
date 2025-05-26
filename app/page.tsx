@@ -29,6 +29,7 @@ export default function Home() {
 
         if (response.ok) {
           const user = await response.json();
+          console.log("User is authenticated:", user);
           setIsAuthenticatedState(true);
         } else {
           const user = null;
@@ -41,7 +42,7 @@ export default function Home() {
     };
 
     checkAuthentication();
-  }, []);
+  });
 
   const isAuthenticated = () => {
     return isAuthenticatedState;
@@ -83,16 +84,6 @@ export default function Home() {
                   </li>
                 )}
               </li>
-              {/* <li>
-                <Link href="/about" className="hover:underline">
-                  About
-                </Link>
-              </li>
-              <li>
-                <Link href="/support" className="hover:underline">
-                  Support
-                </Link>
-              </li> */}
             </ul>
           </nav>
         </div>

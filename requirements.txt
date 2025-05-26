@@ -1,6 +1,7 @@
 fastapi
 uvicorn
 sqlalchemy
+<<<<<<< HEAD
 python-multipart
 python-dotenv
 psycopg2
@@ -11,3 +12,9 @@ JWTError
 bcrypt
 jose-python
 
+=======
+"python-jose[cryptography]"
+"passlib[bcrypt]"
+python-multipart
+psycopg2-binary
+>>>>>>> 6cfc3e79373c7616dbe4c88476b9020844983d65
