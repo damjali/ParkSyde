@@ -29,6 +29,7 @@ export default function Home() {
 
         if (response.ok) {
           const user = await response.json();
+          console.log("User is authenticated:", user);
           setIsAuthenticatedState(true);
         } else {
           const user = null;
@@ -41,7 +42,7 @@ export default function Home() {
     };
 
     checkAuthentication();
-  }, []);
+  });
 
   const isAuthenticated = () => {
     return isAuthenticatedState;

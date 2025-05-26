@@ -73,17 +73,18 @@ async def get_cars_by_user(user_id: str, db: db_dependency):
 
 class CarStatus(BaseModel):
     plateNumber: str 
-    status: bool | None = 0
+    status: bool | None = False
     activated_at: datetime | None = None
 
 @router.put("/cars/status")
 async def update_car_status(change: CarStatus, db: db_dependency):
+    print(change)
     car = db.query(models.Cars).filter(models.Cars.plateNumber == change.plateNumber).first()
     if not car:
         raise HTTPException(status_code=404, detail="Car not found")
     
     car.car_status = change.status
-    car.activated_at = change.activated_at if change.status else None
+    car.activated_at = datetime.now() if change.status else None
     db.commit()
     db.refresh(car)
     return car
