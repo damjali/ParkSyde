@@ -11,6 +11,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel
 from datetime import timedelta, datetime
 from jose import JWTError, jwt
+import traceback
 import os
 from dotenv import load_dotenv
 
@@ -50,15 +51,17 @@ async def get_all_users(db: db_dependency):
 @app.post("/users")
 async def create_user(create_user_request: CreateUserRequest, db: db_dependency):
     try:
+        hashed_password = bcrypt_context.hash(create_user_request.password)
         user_model = Users(
             email=create_user_request.email,
-            hashed_password=bcrypt_context.hash(create_user_request.password)
+            hashed_password=hashed_password
         )
         db.add(user_model)
         db.commit()
         db.refresh(user_model)
         return user_model
     except Exception as e:
+        print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/users/{user_id}")
