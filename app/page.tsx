@@ -83,16 +83,6 @@ export default function Home() {
                   </li>
                 )}
               </li>
-              {/* <li>
-                <Link href="/about" className="hover:underline">
-                  About
-                </Link>
-              </li>
-              <li>
-                <Link href="/support" className="hover:underline">
-                  Support
-                </Link>
-              </li> */}
             </ul>
           </nav>
         </div>

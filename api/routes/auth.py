@@ -15,8 +15,11 @@ import os
 from dotenv import load_dotenv
 
 app = APIRouter()
+
 models.Base.metadata.create_all(bind=engine)
+
 load_dotenv()
+
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
 

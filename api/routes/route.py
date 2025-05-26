@@ -97,31 +97,3 @@ async def delete_car(plateNumber: str, db: db_dependency):
     db.delete(car)
     db.commit()
     return {"detail": "Car deleted successfully"}
-
-
-# router = APIRouter()
-
-# @router.get("/allCars")
-# async def get_all_cars():
-#     cars = list_cars(cars_collection.find())
-#     return cars
-
-# @router.get("/")
-# async def get_car(plateNumber: str):
-#     car = cars_collection.find_one({"plateNumber": plateNumber})
-#     if not car:
-#         return {"error": "Car not found"}
-#     car["_id"] = str(car["_id"])
-#     return car
-
-# @router.post("/")
-# async def add_car(car: Car):
-#     cars_collection.insert_one(dict(car))
-
-# @router.put("/")
-# async def update_car_status(plateNumber: str, status: int):
-#     cars_collection.update_one({"plateNumber": plateNumber}, {"$set": {"car_status": status}})
-
-# @router.delete("/")
-# async def delete_car(plateNumber: str):
-#     cars_collection.find_one_and_delete({"plateNumber": plateNumber})
