@@ -23,6 +23,7 @@ class CarBase(BaseModel):
     user_id: str
     car_status: bool | None = 0
     activated_at: datetime | None = None
+    nfc_code: str | None = None
     
 @router.get("/allCars")
 async def get_all_cars(db: db_dependency):
