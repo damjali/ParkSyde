@@ -1,3 +1,5 @@
+import requests
+import requests
 from fastapi import FastAPI, HTTPException, Depends, APIRouter
 from typing import Annotated, List
 import api.models as models
@@ -5,6 +7,7 @@ from api.config.database import SessionLocal, engine
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from datetime import datetime
+from pyngrok import ngrok
 
 router = APIRouter()
 models.Base.metadata.create_all(bind=engine)
@@ -104,3 +107,32 @@ async def delete_car(plateNumber: str, db: db_dependency):
     db.delete(car)
     db.commit()
     return {"detail": "Car deleted successfully"}
+
+
+
+
+def send_text_message(text):
+    API_KEY = "Tj0XeX_sandbox"  #To Alysha
+    PHONE_NUMBER = "60182237077"
+    url = "https://waba-sandbox.360dialog.io/v1/messages"
+    headers = {
+        "D360-API-KEY": API_KEY,
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "messaging_product": "whatsapp",
+        "recipient_type": "individual",
+        "to": PHONE_NUMBER,
+        "type": "text",
+        "text": {
+            "body": text
+        }
+    }
+    response = requests.post(url, headers=headers, json=payload)
+    print("Send message status:", response.status_code)
+    print(response.json())
+
+@router.get("/send-message")
+async def send_message():
+    send_text_message("YOUR CAR IS BLOCKING ME")
+    return {"status": "message sent"}

@@ -1,0 +1,49 @@
+import requests
+import json
+import os
+
+# API_KEY = os.getenv("D360_API_KEY") #To Adam
+# PHONE_NUMBER = os.getenv("YOUR_NUMBER")
+
+API_KEY = "Tj0XeX_sandbox"  #To Alysha
+PHONE_NUMBER = "60182237077"
+
+# def set_webhook(webhook_url):
+#     url = "https://waba-sandbox.360dialog.io/v1/configs/webhook"
+#     headers = {
+#         "D360-API-KEY": API_KEY,
+#         "Content-Type": "application/json"
+#     }
+#     payload = {
+#         "url": webhook_url
+#     }
+#     response = requests.post(url, headers=headers, json=payload)
+#     print("Set webhook status:", response.status_code)
+#     print(response.json())
+
+
+def send_text_message(text):
+    url = "https://waba-sandbox.360dialog.io/v1/messages"
+    headers = {
+        "D360-API-KEY": API_KEY,
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "messaging_product": "whatsapp",
+        "recipient_type": "individual",
+        "to": PHONE_NUMBER,
+        "type": "text",
+        "text": {
+            "body": text
+        }
+    }
+    response = requests.post(url, headers=headers, json=payload)
+    print("Send message status:", response.status_code)
+    print(response.json())
+
+if __name__ == "__main__":
+    # Optional: Set your webhook URL
+    # set_webhook("https://your-ngrok-or-online-webhook-url")
+
+    # Send a text message to your own number
+    send_text_message("YOUR CAR IS BLOCKING ME")

@@ -1,5 +1,6 @@
 "use client"
 
+
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
@@ -42,18 +43,33 @@ export default function ScanPage() {
     }
   }, [scanTime])
 
-  const handleScan = () => {
-    // In a real app, this would trigger the NFC scanning functionality
-    setIsScanning(true)
+ const handleScan = () => {
+  // Start scanning
+  setIsScanning(true)
 
-    // Simulate a scan after 2 seconds
-    setTimeout(() => {
-      setIsScanning(false)
-      setIsScanned(true)
-      setScanTime(new Date())
-      setPlateNumber("ABC1234") // This would be the actual plate number from the NFC
-    }, 2000)
-  }
+  // Simulate a scan after 2 seconds
+  setTimeout(async () => {
+    setIsScanning(false)
+    setIsScanned(true)
+    setScanTime(new Date())
+    setPlateNumber("ABC1234") // The scanned plate number
+
+    // Make GET request to your FastAPI endpoint
+
+    //this is to notify the user, implement double parking status here
+
+    
+    try {
+      const response = await fetch("http://localhost:8000/send-message") // change URL if different
+      const data = await response.json()
+      console.log("Message send response:", data)
+    } catch (error) {
+      console.error("Failed to send message:", error)
+    }
+
+  }, 2000)
+}
+
 
   const handleEscalate = () => {
     setIsEscalating(true)
