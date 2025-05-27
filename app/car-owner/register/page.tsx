@@ -30,7 +30,7 @@ export default function RegisterPage() {
           return;
         }
 
-        const response = await fetch("http://localhost:8000/is_authenticated", {
+        const response = await fetch("http://192.168.4.183:8000/is_authenticated", {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -143,7 +143,7 @@ export default function RegisterPage() {
     if (validateStep1()) {
       console.log("Checking car plate data:", JSON.stringify({ plateNumber }))
       try {
-        const response = await fetch("http://localhost:8000/cars/" + plateNumber, {
+        const response = await fetch("http://192.168.4.183:8000/cars/" + plateNumber, {
           method: "GET"
         });
 
@@ -180,7 +180,7 @@ export default function RegisterPage() {
       console.log("Authenticating user:", JSON.stringify({ email, password }))
 
       try {
-        const response = await fetch("http://localhost:8000/token", {
+        const response = await fetch("http://192.168.4.183:8000/token", {
           method: "POST",
           headers: {
             "Content-Type": "application/x-www-form-urlencoded",
@@ -207,7 +207,7 @@ export default function RegisterPage() {
       const car_status = 0
       if (validation) try {
         console.log("Sending data:", JSON.stringify({ plateNumber, user_id, car_status }))
-        let response = await fetch("http://localhost:8000/cars", {
+        let response = await fetch("http://192.168.4.183:8000/cars", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -226,7 +226,7 @@ export default function RegisterPage() {
 
         const pin_number = pin;
         const phone_number = phoneNumber;
-        response = await fetch("http://localhost:8000/update", {
+        response = await fetch("http://192.168.4.183:8000/update", {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
@@ -250,7 +250,7 @@ export default function RegisterPage() {
       // update token
 
       if (validation) try {
-        const response = await fetch("http://localhost:8000/token", {
+        const response = await fetch("http://192.168.4.183:8000/token", {
           method: "POST",
           headers: {
             "Content-Type": "application/x-www-form-urlencoded",

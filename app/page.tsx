@@ -26,7 +26,7 @@ export default function Home() {
           return;
         }
 
-        const response = await fetch("http://localhost:8000/is_authenticated", {
+        const response = await fetch("http://192.168.4.183:8000/is_authenticated", {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,

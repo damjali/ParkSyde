@@ -40,7 +40,7 @@ export default function GeneralNotificationScanPage() {
     setIsSubmitting(true);
     
     try {
-      const response = await fetch("http://localhost:8000/send-message-notify-owner"); // change URL if different
+      const response = await fetch("http://192.168.4.183:8000/send-message-notify-owner"); // change URL if different
       const data = await response.json();
       console.log("Message send response:", data);
       setIsSuccess(true);

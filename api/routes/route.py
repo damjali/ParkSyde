@@ -14,6 +14,8 @@ from twilio.rest import Client
 router = APIRouter()
 models.Base.metadata.create_all(bind=engine)
 
+from fastapi.middleware.cors import CORSMiddleware
+
 def get_db():
     db = SessionLocal()
     try:

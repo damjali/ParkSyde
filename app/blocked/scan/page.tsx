@@ -60,7 +60,7 @@ export default function ScanPage() {
 
     
     try {
-      const response = await fetch("http://localhost:8000/send-message-notify-owner") // change URL if different
+      const response = await fetch("http://192.168.4.183:8000/send-message-notify-owner") // change URL if different
       const data = await response.json()
       console.log("Message send response:", data)
     } catch (error) {
@@ -96,7 +96,7 @@ export default function ScanPage() {
 
   const handleCallingOwner = async () => {
     try {
-      const response = await fetch("http://localhost:8000/call-owner", {
+      const response = await fetch("http://192.168.4.183:8000/call-owner", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

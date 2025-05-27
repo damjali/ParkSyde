@@ -3,6 +3,8 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 from .config.database import Base
 
+
+
 class Users(Base):
     __tablename__ = "users"
 

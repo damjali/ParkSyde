@@ -40,7 +40,7 @@ export default function ActivatePage() {
           setIsAuthenticatedState(false);
           return;
         }
-        const response = await fetch("http://localhost:8000/is_authenticated", {
+        const response = await fetch("http://192.168.4.183:8000/is_authenticated", {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -72,7 +72,7 @@ export default function ActivatePage() {
     
     const fetchCarPlates = async () => {
       try {
-        const response = await fetch("http://localhost:8000/carsUser/" + user.user_id, {
+        const response = await fetch("http://192.168.4.183:8000/carsUser/" + user.user_id, {
           method: "GET"
         })
 
@@ -99,7 +99,7 @@ export default function ActivatePage() {
     }
 
     try {
-      const response = await fetch("http://localhost:8000/cars/" + plateNumber, {
+      const response = await fetch("http://192.168.4.183:8000/cars/" + plateNumber, {
         method: "GET"
       });
 
@@ -145,7 +145,7 @@ export default function ActivatePage() {
     try {
       const status = true;
       console.log("Data:", { plateNumber, status })
-      const response = await fetch("http://localhost:8000/cars/status", {
+      const response = await fetch("http://192.168.4.183:8000/cars/status", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -193,7 +193,7 @@ export default function ActivatePage() {
 
     const status = false;
     try {
-      const response = await fetch("http://localhost:8000/cars/status", {
+      const response = await fetch("http://192.168.4.183:8000/cars/status", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -235,7 +235,7 @@ export default function ActivatePage() {
 
     console.log("Checking car plate data:", JSON.stringify({ newPlateNumber }))
     try {
-      const response = await fetch("http://localhost:8000/cars/" + newPlateNumber, {
+      const response = await fetch("http://192.168.4.183:8000/cars/" + newPlateNumber, {
         method: "GET"
       });
 
@@ -253,7 +253,7 @@ export default function ActivatePage() {
         const car_status = false; // Default status for new car
         let plateNumber = newPlateNumber.toUpperCase();
         console.log("Sending data:", JSON.stringify({ plateNumber, user_id, car_status }))
-        const response = await fetch("http://localhost:8000/cars", {
+        const response = await fetch("http://192.168.4.183:8000/cars", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
