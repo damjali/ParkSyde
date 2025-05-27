@@ -69,6 +69,7 @@ export default function ActivatePage() {
   useEffect(() => {
     isAuthenticated();
 
+    
     const fetchCarPlates = async () => {
       try {
         const response = await fetch("http://localhost:8000/carsUser/" + user.user_id, {

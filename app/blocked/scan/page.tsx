@@ -60,7 +60,7 @@ export default function ScanPage() {
 
     
     try {
-      const response = await fetch("http://localhost:8000/send-message") // change URL if different
+      const response = await fetch("http://localhost:8000/send-message-notify-owner") // change URL if different
       const data = await response.json()
       console.log("Message send response:", data)
     } catch (error) {

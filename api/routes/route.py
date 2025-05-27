@@ -132,7 +132,21 @@ def send_text_message(text):
     print("Send message status:", response.status_code)
     print(response.json())
 
-@router.get("/send-message")
+@router.get("/send-message-notify-owner")
 async def send_message():
     send_text_message("YOUR CAR IS BLOCKING ME")
     return {"status": "message sent"}
+
+@router.get("/carsUser/status/{user_id}")
+async def get_car_status_by_user(user_id: str, db: db_dependency):
+    cars = db.query(models.Cars).filter(models.Cars.user_id == user_id).all()
+    if not cars:
+        raise HTTPException(status_code=404, detail="No cars found for this user")
+    
+    return [
+        {
+            "plateNumber": car.plateNumber,
+            "car_status": car.car_status
+        }
+        for car in cars
+    ]

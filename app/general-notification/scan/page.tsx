@@ -25,11 +25,14 @@ export default function GeneralNotificationScanPage() {
     // In a real app, this would trigger the NFC scanning functionality
     setIsScanning(true)
 
+    
+
     // Simulate a scan after 2 seconds
-    setTimeout(() => {
+    setTimeout(async() => {
       setIsScanning(false)
       setIsScanned(true)
       setPlateNumber("ABC1234") // This would be the actual plate number from the NFC
+      
     }, 2000)
   }
 
@@ -37,7 +40,15 @@ export default function GeneralNotificationScanPage() {
     setIsSubmitting(true)
 
     // Simulate sending notification
-    setTimeout(() => {
+    setTimeout(async() => {
+
+      try {
+      const response = await fetch("http://localhost:8000/send-message-notify-owner") // change URL if different
+      const data = await response.json()
+      console.log("Message send response:", data)
+    } catch (error) {
+      console.error("Failed to send message:", error)
+    }
       setIsSubmitting(false)
       setIsSuccess(true)
     }, 2000)
