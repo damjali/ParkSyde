@@ -23,7 +23,7 @@ class CarBase(BaseModel):
     user_id: str
     car_status: bool | None = 0
     activated_at: datetime | None = None
-    nfc_code: str | None = None
+    nfc_code: str
     
 @router.get("/allCars")
 async def get_all_cars(db: db_dependency):
@@ -50,8 +50,13 @@ async def get_user_phone_number(plateNumber: str, db: db_dependency):
     
     return {"phone_number": user.phone_number}
 
+class CreateCarBase(BaseModel):
+    plateNumber: str 
+    user_id: str
+    car_status: bool | None = 0
+
 @router.post("/cars")
-async def create_car(car: CarBase, db: db_dependency):
+async def create_car(car: CreateCarBase, db: db_dependency):
     try:
         car_model = models.Cars(
             plateNumber=car.plateNumber.upper(),
