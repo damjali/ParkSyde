@@ -94,6 +94,29 @@ export default function ScanPage() {
     }, 2000)
   }
 
+  const handleCallingOwner = async () => {
+    try {
+      const response = await fetch("http://localhost:8000/call-owner", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Call initiated:", data);
+        alert("Call initiated successfully!");
+      } else {
+        console.error("Failed to call owner");
+        alert("Failed to initiate call");
+      }
+    } catch (error) {
+      console.error("Error calling owner:", error);
+      alert("Error initiating call");
+    }
+  };
+  
   const renderEscalationContent = () => {
     switch (escalationStep) {
       case 1:
@@ -272,7 +295,7 @@ export default function ScanPage() {
                 </div>
 
                 <div className="space-y-4">
-                  <Button variant="outline" className="w-full border-[#00A86B] text-[#00A86B] py-4">
+                  <Button onClick={handleCallingOwner} variant="outline" className="w-full border-[#00A86B] text-[#00A86B] py-4">
                     <Phone className="mr-2 h-5 w-5" />
                     Call Owner (Masked Number)
                   </Button>

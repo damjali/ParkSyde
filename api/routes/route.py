@@ -8,6 +8,8 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from datetime import datetime
 from pyngrok import ngrok
+import os
+from twilio.rest import Client
 
 router = APIRouter()
 models.Base.metadata.create_all(bind=engine)
@@ -150,3 +152,29 @@ async def get_car_status_by_user(user_id: str, db: db_dependency):
         }
         for car in cars
     ]
+
+@router.post("/call-owner")
+async def call_owner():
+    # Twilio credentials - replace with your actual credentials
+    account_sid = os.getenv("TWILIO_ACCOUNT_SID")
+    auth_token = os.getenv("TWILIO_AUTH_TOKEN")
+    twilio_phone_number = os.getenv("TWILIO_PHONE_NUMBER")
+    
+    # Hardcoded phone number
+    owner_phone_number = "+60182237077"
+    
+    try:
+        client = Client(account_sid, auth_token)
+        
+        call = client.calls.create(
+            to=owner_phone_number,
+            from_=twilio_phone_number,
+            twiml='<Response><Say>Hello, your car is blocking someone. Please move your car immediately. Thank you.</Say></Response>'
+        )
+        
+        print(f"Call initiated with SID: {call.sid}")
+        return {"status": "call initiated", "call_sid": call.sid}
+    
+    except Exception as e:
+        print(f"Error making call: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to make call: {str(e)}")

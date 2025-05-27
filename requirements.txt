@@ -12,3 +12,4 @@ bcrypt
 jose-python 
 python-multipart
 psycopg2-binary
+pyngrok
