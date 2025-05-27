@@ -19,4 +19,4 @@ class Cars(Base):
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.user_id"))
     car_status = Column(Boolean, default=False)
     activated_at = Column(DateTime, default=None)
-    nfc_code = Column(UUID(as_uuid=True), default=None, unique=True, server_default=func.gen_random_uuid())
+    nfc_code = Column(UUID(as_uuid=True), unique=True, server_default=func.gen_random_uuid())
