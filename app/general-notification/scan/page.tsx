@@ -36,23 +36,20 @@ export default function GeneralNotificationScanPage() {
     }, 2000)
   }
 
-  const handleSubmit = () => {
-    setIsSubmitting(true)
-
-    // Simulate sending notification
-    setTimeout(async() => {
-
-      try {
-      const response = await fetch("http://localhost:8000/send-message-notify-owner") // change URL if different
-      const data = await response.json()
-      console.log("Message send response:", data)
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    
+    try {
+      const response = await fetch("http://localhost:8000/send-message-notify-owner"); // change URL if different
+      const data = await response.json();
+      console.log("Message send response:", data);
+      setIsSuccess(true);
     } catch (error) {
-      console.error("Failed to send message:", error)
+      console.error("Failed to send message:", error);
+    } finally {
+      setIsSubmitting(false);
     }
-      setIsSubmitting(false)
-      setIsSuccess(true)
-    }, 2000)
-  }
+  };
 
   const getAlertIcon = (type: AlertType) => {
     switch (type) {

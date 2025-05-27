@@ -112,6 +112,7 @@ async def delete_car(plateNumber: str, db: db_dependency):
 
 
 def send_text_message(text):
+    print("send_text_message called")
     API_KEY = "Tj0XeX_sandbox"  #To Alysha
     PHONE_NUMBER = "60182237077"
     url = "https://waba-sandbox.360dialog.io/v1/messages"
@@ -128,9 +129,14 @@ def send_text_message(text):
             "body": text
         }
     }
-    response = requests.post(url, headers=headers, json=payload)
-    print("Send message status:", response.status_code)
-    print(response.json())
+    try:
+        response = requests.post(url, headers=headers, json=payload)
+        print("Send message status:", response.status_code)
+        print(response.json())
+    except Exception as e:
+        print(f"Error sending message: {e}")
+        return {"status": "error", "message": str(e)}
+    return {"status": "message sent"}
 
 @router.get("/send-message-notify-owner")
 async def send_message():
