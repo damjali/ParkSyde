@@ -10,6 +10,12 @@ import { Button } from "@/components/ui/button"
 export default function Home() {
   const [showCarOwnerOptions, setShowCarOwnerOptions] = useState(false);
   const [isAuthenticatedState, setIsAuthenticatedState] = useState(false);
+  const [user, setUser] = useState({
+      email: "",
+      user_id: "",
+      pin_number: "",
+      phone_number: ""
+    });
 
   useEffect(() => {
     const checkAuthentication = async () => {
@@ -29,10 +35,16 @@ export default function Home() {
 
         if (response.ok) {
           const user = await response.json();
+          setUser(user);
           console.log("User is authenticated:", user);
           setIsAuthenticatedState(true);
         } else {
-          const user = null;
+          setUser({
+            email: "",
+            user_id: "",
+            pin_number: "",
+            phone_number: ""
+          });
           setIsAuthenticatedState(false);
         }
       } catch (error) {
@@ -74,6 +86,7 @@ export default function Home() {
                 )}
                 {isAuthenticatedState && (
                   <li>
+                    <span className="mr-2">{user.email}</span>
                     <Button onClick={() => {
                       localStorage.removeItem("token");
                       setIsAuthenticatedState(false);
@@ -82,8 +95,8 @@ export default function Home() {
                       Logout
                     </Button>
                   </li>
-                )}
-              </li>
+              )}
+            </li>
             </ul>
           </nav>
         </div>
